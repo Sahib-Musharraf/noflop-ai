@@ -62,8 +62,5 @@ npm run dev
 
 ## Builder
 
-Built by Sahib — AI engineer and community builder.
+Built by Sahib
 
----
-
-*Built for builders who want truth, not therapy.*
