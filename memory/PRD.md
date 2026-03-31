@@ -1,62 +1,46 @@
 # Noflop.ai - PRD
 
 ## Problem Statement
-Build a single-page startup idea validation app called Noflop.ai with the tagline "Don't let your idea flop." The app uses AI (Claude Sonnet 4.5) to provide brutally honest feedback on startup ideas with structured sections. Additional features: shareable result links, idea history sidebar, recommendation engine, copy result.
+Build a single-page startup idea validation app called Noflop.ai with a 9-dimension structured scoring engine. Uses Claude Sonnet 4.5 for brutally honest evaluation across Problem, Market, ICP, Behavior, Feasibility, Monetization, Advantage, Execution, and Risk dimensions.
 
 ## Architecture
 - **Frontend**: React 18 with Framer Motion, react-router-dom
 - **Backend**: FastAPI (Python) with pymongo
-- **Database**: MongoDB (for storing results for shareable links)
-- **AI**: Claude Sonnet 4.5 via emergentintegrations library (Emergent LLM Key)
-- **Local Storage**: Idea history sidebar (no backend needed)
-
-## User Personas
-- Startup founders validating ideas before building
-- Indie hackers looking for honest feedback
-- VCs/advisors sharing quick idea assessments
-
-## Core Requirements
-- Single page app, no auth required
-- AI-powered idea validation with structured output
-- Dark theme (#0A0A0A bg, indigo accent)
-- Shareable result links via URL params (?r={id})
-- Mobile responsive
+- **Database**: MongoDB (results storage for shareable links)
+- **AI**: Claude Sonnet 4.5 via emergentintegrations (Emergent LLM Key)
+- **Local Storage**: Idea history sidebar
 
 ## What's Been Implemented
 
-### Iteration 1 (Jan 30, 2026)
-- [x] Hero section matching reference design (42% stat, pills, badge)
-- [x] Textarea input with character count, Ctrl+Enter shortcut
-- [x] Claude Sonnet 4.5 integration for brutal idea validation
-- [x] Result cards: Signal badge, Score, Brutal Truth (3 sections), User Questions (3)
-- [x] MongoDB storage for results with unique IDs
-- [x] Shareable link generation and loading
-- [x] Loading state with spinner animation
-- [x] Error handling for short inputs
-- [x] Mobile responsive design
-- [x] Copy to clipboard for share links
+### Iteration 1-3 (Jan 30, 2026)
+- [x] Hero section, dark theme, indigo accent
+- [x] Basic idea validation flow with Claude Sonnet 4.5
+- [x] Signal/Score/Brutal Truth/User Questions result cards
+- [x] Differentiation Angles, Similar Failures cards
+- [x] Idea History Sidebar (localStorage)
+- [x] Recommendation Engine with Validate This buttons
+- [x] Copy Result + Copy Link buttons
+- [x] Leaderboard with crown icons for top 3
+- [x] Shareable result links (?r={id})
 
-### Iteration 2 (Jan 30, 2026)
-- [x] **Differentiation Angle** card: 2-3 specific ways to make idea different from competition
-- [x] **Similar Ideas That Flopped** card: 1-2 real startups that tried similar and failed with reasons
-- [x] **Idea History Sidebar**: localStorage-based left sidebar with verdict badges, scores, click to reload
-- [x] **Recommendation Engine**: "You might want to build this instead" with 3 pivot ideas + Validate This buttons
-- [x] **Copy Result Button**: Formatted verdict, score, key points with noflop.ai branding
-- [x] All E2E testing passed (100% backend, frontend, integration)
-
-### Iteration 3 (Jan 30, 2026)
-- [x] **Leaderboard**: Top-scored ideas ranked by score, crown icons for top 3, current result highlighted, refreshes after each validation
-- [x] All E2E testing passed (100% backend, frontend, integration)
+### Iteration 4 (Jan 30, 2026) — MAJOR UPGRADE
+- [x] **9-Dimension Scoring Engine**: Problem, Market, ICP, Behavior, Feasibility, Monetization, Advantage, Execution, Risk — each scored 0-10
+- [x] **Weighted Final Score**: Calculated per formula with proper weights
+- [x] **Deep Analysis Mode**: Expandable form with 14 optional context fields (target user, problem, current behavior, trigger moment, frequency, pain level, existing alternatives, monetization idea, willingness to pay, why now, unfair advantage, MVP plan, time to build, failure risk)
+- [x] **Animated Breakdown Bars**: Color-coded per dimension with animated fill
+- [x] **Strengths + Risks**: Side-by-side cards with green/red bullet indicators
+- [x] **Critical Insights**: Highlighted must-know items
+- [x] **Actionable Suggestions**: Numbered next steps
+- [x] **Verdict System**: Build / Refine / Avoid (replacing BUILD IT / KILL IT / PIVOT IT)
+- [x] **Backward Compatibility**: All existing features preserved (sidebar, leaderboard, share, pivots)
+- [x] Testing: Backend 100%, Frontend 100%, Integration blocked only by API budget limit
 
 ## Backlog
-- P1: Rate limiting to prevent abuse
-- P1: Social share (Twitter/LinkedIn) with OG meta tags
-- P2: "Compare two ideas" side-by-side mode
-- P2: Clear history button in sidebar
-- P3: Export result as PDF/image
-- P3: Analytics dashboard (most common signals, avg scores)
+- P1: Rate limiting
+- P1: OG meta tags for social sharing
+- P2: Compare two ideas side-by-side
+- P3: Export as PDF/image
 
 ## Next Tasks
-- Add OG meta tags for better social sharing preview
-- Add rate limiting middleware
-- Social share buttons (Twitter/LinkedIn)
+- Add balance to Emergent LLM key (budget exceeded from testing)
+- Social share buttons
