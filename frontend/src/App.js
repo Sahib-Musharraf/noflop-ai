@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Copy, Check, ArrowRight, Zap, Target, MessageCircle,
   AlertTriangle, Lightbulb, Skull, Sparkles, ChevronLeft,
   ChevronRight, Clock, ClipboardCheck, RotateCcw, Trophy, Crown,
   ChevronDown, Shield, TrendingUp, Crosshair, BarChart3, Rocket,
-  Swords, Send
+  Swords, Send, Users, Share2
 } from 'lucide-react';
+import BuilderRoom from './components/BuilderRoom';
 import './App.css';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -75,6 +76,28 @@ function App() {
   const [counterArg, setCounterArg] = useState('');
   const [challengeResult, setChallengeResult] = useState(null);
   const [challengeLoading, setChallengeLoading] = useState(false);
+  const [sharedToRoom, setSharedToRoom] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const shareToBuilderRoom = (name) => {
+    if (!result) return;
+    const ROOM_KEY = 'noflop_builder_room';
+    const posts = JSON.parse(localStorage.getItem(ROOM_KEY) || '[]');
+    const post = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      idea: result.idea,
+      verdict: result.verdict || (result.signal?.includes('BUILD') ? 'Build' : result.signal?.includes('KILL') ? 'Avoid' : 'Refine'),
+      score: result.score,
+      name: name || 'Anonymous',
+      created_at: new Date().toISOString(),
+      replies: [],
+    };
+    posts.unshift(post);
+    localStorage.setItem(ROOM_KEY, JSON.stringify(posts));
+    setSharedToRoom(true);
+    setTimeout(() => setSharedToRoom(false), 3000);
+  };
 
   const fetchLeaderboard = async () => {
     try {
@@ -225,10 +248,23 @@ function App() {
       <div className="app-main">
         {/* Nav */}
         <nav className="nav" data-testid="nav-bar">
-          <div className="nav-logo" data-testid="nav-logo">noflop.ai</div>
+          <div className="nav-left">
+            <div className="nav-logo" data-testid="nav-logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>noflop.ai</div>
+            <div className="nav-tabs">
+              <button className={`nav-tab ${location.pathname === '/' || location.pathname === '' ? 'nav-tab-active' : ''}`} onClick={() => navigate('/')} data-testid="nav-tab-validate">
+                <Zap size={13} /> Validate
+              </button>
+              <button className={`nav-tab ${location.pathname === '/room' ? 'nav-tab-active' : ''}`} onClick={() => navigate('/room')} data-testid="nav-tab-room">
+                <Users size={13} /> Builder Room
+              </button>
+            </div>
+          </div>
           <div className="nav-tagline">No glaze. No hype. Just signal.</div>
         </nav>
 
+        <Routes>
+        <Route path="/room" element={<BuilderRoom />} />
+        <Route path="*" element={<>
         {/* Hero */}
         <section className="hero" data-testid="hero-section">
           <div className="hero-content">
@@ -463,6 +499,9 @@ function App() {
                   </button>
                 </div>
 
+                {/* Share to Builder Room */}
+                <ShareToRoom onShare={shareToBuilderRoom} shared={sharedToRoom} />
+
                 {/* Challenge the Verdict */}
                 <div className="challenge-section" data-testid="challenge-section">
                   {!challengeOpen && !challengeResult && (
@@ -559,9 +598,52 @@ function App() {
           </section>
         )}
 
+        </>} />
+        </Routes>
         <footer className="footer" data-testid="footer"><p>noflop.ai — No glaze. No hype. Just signal.</p></footer>
       </div>
     </div>
+  );
+}
+
+function ShareToRoom({ onShare, shared }) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+
+  if (shared) {
+    return (
+      <motion.div className="room-share-done" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} data-testid="room-share-done">
+        <Check size={16} /> Shared to Builder Room!
+        <button className="room-share-view" onClick={() => window.location.href = '/room'}>View</button>
+      </motion.div>
+    );
+  }
+
+  if (!open) {
+    return (
+      <button className="room-share-btn" onClick={() => setOpen(true)} data-testid="share-to-room-btn">
+        <Share2 size={15} /> Share to Builder Room
+      </button>
+    );
+  }
+
+  return (
+    <motion.div className="room-share-form" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} data-testid="room-share-form">
+      <input
+        className="room-share-input"
+        placeholder="Your name (optional, default: Anonymous)"
+        value={name}
+        onChange={e => setName(e.target.value)}
+        maxLength={40}
+        data-testid="room-share-name-input"
+      />
+      <div className="room-share-actions">
+        <button className="room-share-submit" onClick={() => { onShare(name); setOpen(false); setName(''); }} data-testid="room-share-submit">
+          <Share2 size={13} /> Share
+        </button>
+        <button className="room-share-cancel" onClick={() => { setOpen(false); setName(''); }}>Cancel</button>
+      </div>
+    </motion.div>
   );
 }
 
