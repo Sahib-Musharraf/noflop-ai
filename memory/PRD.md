@@ -35,6 +35,10 @@ Build a single-page startup idea validation app called Noflop.ai with a 9-dimens
 - [x] **Backward Compatibility**: All existing features preserved (sidebar, leaderboard, share, pivots)
 - [x] Testing: Backend 100%, Frontend 100%, Integration blocked only by API budget limit
 
+### Iteration 5 (Jan 30, 2026)
+- [x] **Challenge the Verdict**: Button appears after result, opens counter-argument textarea, sends to Claude Sonnet 4.5 for re-evaluation, shows COUNTER ACCEPTED/REJECTED badge with brutal reasoning, "Challenge Again" to retry
+- [x] Testing: Backend 100% (14/14), Frontend 95% (clipboard browser permission only)
+
 ## Backlog
 - P1: Rate limiting
 - P1: OG meta tags for social sharing
