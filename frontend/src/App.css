@@ -1047,6 +1047,186 @@
   cursor: not-allowed;
 }
 
+/* ========== CHALLENGE THE VERDICT ========== */
+.challenge-section {
+  margin-top: 4px;
+}
+
+.challenge-toggle-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 24px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px dashed #2a2a2a;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.challenge-toggle-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.challenge-form {
+  overflow: hidden;
+}
+
+.challenge-form-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.challenge-textarea {
+  width: 100%;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border: 1px solid #222;
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: var(--font-main);
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 90px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.challenge-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.challenge-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.challenge-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.challenge-submit-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-family: var(--font-main);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.challenge-submit-btn:hover:not(:disabled) {
+  background: #5558e6;
+}
+
+.challenge-submit-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.challenge-cancel-btn {
+  padding: 12px 20px;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  font-family: var(--font-main);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.challenge-cancel-btn:hover {
+  border-color: #444;
+  color: var(--text-secondary);
+}
+
+.challenge-result {
+  background: var(--bg-card);
+  border: 1px solid var(--bg-card-border);
+  border-radius: 10px;
+  padding: 24px;
+}
+
+.challenge-badge {
+  display: inline-block;
+  padding: 10px 22px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  border: 1px solid;
+  margin-bottom: 16px;
+}
+
+.challenge-accepted {
+  color: var(--green);
+  background: var(--green-dim);
+  border-color: var(--green-border);
+}
+
+.challenge-rejected {
+  color: var(--red);
+  background: var(--red-dim);
+  border-color: var(--red-border);
+}
+
+.challenge-reasoning {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.challenge-retry-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.challenge-retry-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 /* ========== LEADERBOARD ========== */
 .leaderboard-section {
   padding: 60px 48px 80px;

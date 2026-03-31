@@ -313,3 +313,82 @@ async def get_leaderboard():
             "verdict": doc.get("verdict", ""),
         })
     return {"leaderboard": leaderboard}
+
+
+CHALLENGE_PROMPT = """You are Noflop.ai — the most brutally honest startup advisor alive.
+
+A founder received an evaluation for their startup idea and disagrees with the verdict. Your job is to fairly but critically assess their counter-argument.
+
+RULES:
+- If their counter is genuinely valid and reveals information that changes the evaluation, ACCEPT it.
+- If their counter is cope, wishful thinking, or does not address the core issues, REJECT it.
+- Be specific. Reference the original evaluation points they are challenging.
+- Do NOT be a pushover. Most counters are cope. Only accept if they make a genuinely strong case.
+- One paragraph of brutal honest reasoning. No fluff.
+
+You MUST respond in valid JSON:
+{
+  "counter_status": "ACCEPTED" | "REJECTED",
+  "reasoning": "One paragraph of brutal honest reasoning."
+}
+
+Respond ONLY with valid JSON. No markdown, no backticks."""
+
+
+class ChallengeRequest(BaseModel):
+    result_id: str
+    counter_argument: str
+
+
+@app.post("/api/challenge")
+async def challenge_verdict(request: ChallengeRequest):
+    if not request.counter_argument or len(request.counter_argument.strip()) < 10:
+        raise HTTPException(status_code=400, detail="Give us a real argument. At least a couple sentences.")
+
+    doc = results_collection.find_one({"result_id": request.result_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Original result not found.")
+
+    original_summary = (
+        f"Idea: {doc.get('idea', '')}\n"
+        f"Verdict: {doc.get('verdict', doc.get('signal', ''))}\n"
+        f"Score: {doc.get('score', 0)}/10\n"
+        f"Verdict Reason: {doc.get('verdict_reason', doc.get('signal_reason', ''))}\n"
+        f"Strengths: {', '.join(doc.get('strengths', []))}\n"
+        f"Risks: {', '.join(doc.get('risks', []))}\n"
+        f"Critical Insights: {', '.join(doc.get('critical_insights', []))}"
+    )
+
+    session_id = str(uuid.uuid4())
+    chat = LlmChat(
+        api_key=EMERGENT_LLM_KEY,
+        session_id=session_id,
+        system_message=CHALLENGE_PROMPT,
+    ).with_model("anthropic", "claude-sonnet-4-5-20250929")
+
+    msg = (
+        f"ORIGINAL EVALUATION:\n{original_summary}\n\n"
+        f"The founder disagrees with this verdict. Their argument is:\n{request.counter_argument}\n\n"
+        f"Is their counter valid? Re-evaluate honestly — accept or reject the counter with specific reasoning."
+    )
+
+    response_text = await chat.send_message(UserMessage(text=msg))
+
+    try:
+        data = json.loads(response_text)
+    except json.JSONDecodeError:
+        cleaned = response_text.strip()
+        if cleaned.startswith("```"):
+            cleaned = cleaned.split("\n", 1)[1] if "\n" in cleaned else cleaned[3:]
+            if cleaned.endswith("```"):
+                cleaned = cleaned[:-3]
+            cleaned = cleaned.strip()
+        try:
+            data = json.loads(cleaned)
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=500, detail="Failed to parse AI response.")
+
+    return {
+        "counter_status": data.get("counter_status", "REJECTED"),
+        "reasoning": data.get("reasoning", ""),
+    }

@@ -503,9 +503,138 @@ class NoFlopAPITester:
             print("   ❌ Leaderboard endpoint failed or returned invalid data")
             return False
 
+    def test_challenge_verdict_endpoint(self):
+        """Test challenge verdict endpoint - NEW for iteration 5"""
+        # First get a result ID from leaderboard
+        success, response = self.run_test(
+            "Get Leaderboard for Challenge Test",
+            "GET",
+            "api/leaderboard",
+            200
+        )
+        
+        if not success or 'leaderboard' not in response or len(response['leaderboard']) == 0:
+            print("❌ No results available for challenge testing")
+            return False
+            
+        result_id = response['leaderboard'][0]['id']
+        print(f"   Using result ID: {result_id}")
+        
+        # Test valid challenge
+        challenge_data = {
+            "result_id": result_id,
+            "counter_argument": "The analysis underestimated the market demand. Dog walking is a $1B+ industry and there's clear evidence of unmet demand in urban areas. The convenience factor and safety features (GPS tracking) provide significant differentiation from existing services that justifies the evaluation."
+        }
+        
+        success, response = self.run_test(
+            "Challenge Verdict - Valid Request",
+            "POST",
+            "api/challenge",
+            200,
+            data=challenge_data,
+            timeout=60  # AI calls take time
+        )
+        
+        if success:
+            # Check required fields
+            required_fields = ["counter_status", "reasoning"]
+            missing_fields = [field for field in required_fields if field not in response]
+            
+            if missing_fields:
+                print(f"   ❌ Response missing required fields: {missing_fields}")
+                return False
+            
+            # Validate counter_status format
+            if response['counter_status'] in ['ACCEPTED', 'REJECTED']:
+                print(f"   ✅ Valid counter_status: {response['counter_status']}")
+            else:
+                print(f"   ❌ Invalid counter_status: {response['counter_status']}")
+                return False
+                
+            # Validate reasoning format
+            if isinstance(response['reasoning'], str) and len(response['reasoning']) > 10:
+                print(f"   ✅ Valid reasoning (length: {len(response['reasoning'])})")
+                print(f"   Reasoning preview: {response['reasoning'][:100]}...")
+            else:
+                print("   ❌ Invalid reasoning format or too short")
+                return False
+                
+            return True
+        else:
+            return False
+
+    def test_challenge_validation_errors(self):
+        """Test challenge endpoint validation - NEW for iteration 5"""
+        # Get a valid result ID first
+        success, response = self.run_test(
+            "Get Leaderboard for Validation Test",
+            "GET",
+            "api/leaderboard",
+            200
+        )
+        
+        if not success or 'leaderboard' not in response or len(response['leaderboard']) == 0:
+            print("❌ No results available for validation testing")
+            return False
+            
+        result_id = response['leaderboard'][0]['id']
+        
+        # Test 1: Short argument (should fail with 400)
+        short_data = {
+            "result_id": result_id,
+            "counter_argument": "No"
+        }
+        
+        success1, response1 = self.run_test(
+            "Challenge Validation - Short Argument",
+            "POST",
+            "api/challenge",
+            400,  # Should return 400 for short argument
+            data=short_data
+        )
+        
+        if success1:
+            print("   ✅ Correctly rejects short arguments")
+        
+        # Test 2: Invalid result ID (should fail with 404)
+        invalid_data = {
+            "result_id": "invalid_id_12345",
+            "counter_argument": "This is a longer argument that should pass validation but fail on result lookup because the result ID does not exist in the database."
+        }
+        
+        success2, response2 = self.run_test(
+            "Challenge Validation - Invalid Result ID",
+            "POST",
+            "api/challenge",
+            404,  # Should return 404 for invalid result ID
+            data=invalid_data
+        )
+        
+        if success2:
+            print("   ✅ Correctly rejects invalid result IDs")
+        
+        # Test 3: Missing fields
+        missing_field_data = {
+            "result_id": result_id
+            # Missing counter_argument
+        }
+        
+        success3, response3 = self.run_test(
+            "Challenge Validation - Missing Counter Argument",
+            "POST",
+            "api/challenge",
+            422,  # Should return 422 for missing required field
+            data=missing_field_data
+        )
+        
+        if success3:
+            print("   ✅ Correctly rejects missing fields")
+        
+        return success1 and success2 and success3
+
     def run_all_tests(self):
         """Run all API tests"""
-        print("🚀 Starting NoFlop.ai API Tests - Iteration 4")
+        print("🚀 Starting NoFlop.ai API Tests - Iteration 5")
         print("=" * 50)
         
         # Test health endpoint
@@ -527,6 +656,10 @@ class NoFlopAPITester:
         
         # Test leaderboard endpoint
         leaderboard_success = self.test_leaderboard_endpoint()
+        
+        # Test challenge endpoint - NEW for iteration 5
+        challenge_success = self.test_challenge_verdict_endpoint()
+        challenge_validation_success = self.test_challenge_validation_errors()
         
         # Print summary
         print("\n" + "=" * 50)

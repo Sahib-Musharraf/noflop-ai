@@ -5,7 +5,8 @@ import {
   Copy, Check, ArrowRight, Zap, Target, MessageCircle,
   AlertTriangle, Lightbulb, Skull, Sparkles, ChevronLeft,
   ChevronRight, Clock, ClipboardCheck, RotateCcw, Trophy, Crown,
-  ChevronDown, Shield, TrendingUp, Crosshair, BarChart3, Rocket
+  ChevronDown, Shield, TrendingUp, Crosshair, BarChart3, Rocket,
+  Swords, Send
 } from 'lucide-react';
 import './App.css';
 
@@ -70,6 +71,10 @@ function App() {
   const [searchParams] = useSearchParams();
   const resultRef = useRef(null);
   const [leaderboard, setLeaderboard] = useState([]);
+  const [challengeOpen, setChallengeOpen] = useState(false);
+  const [counterArg, setCounterArg] = useState('');
+  const [challengeResult, setChallengeResult] = useState(null);
+  const [challengeLoading, setChallengeLoading] = useState(false);
 
   const fetchLeaderboard = async () => {
     try {
@@ -102,6 +107,7 @@ function App() {
     const text = (overrideIdea || idea).trim();
     if (!text || text.length < 10) { setError('Come on. Give us at least a couple sentences to tear apart.'); return; }
     setLoading(true); setError(''); setResult(null);
+    setChallengeOpen(false); setChallengeResult(null); setCounterArg('');
     try {
       const body = { idea: text, ...context };
       const res = await fetch(`${API_URL}/api/validate`, {
@@ -150,6 +156,23 @@ function App() {
     ];
     navigator.clipboard.writeText(lines.join('\n'));
     setResultCopied(true); setTimeout(() => setResultCopied(false), 2000);
+  };
+
+  const handleChallenge = async () => {
+    if (!counterArg.trim() || counterArg.trim().length < 10) return;
+    const rid = result?.result_id || result?.id;
+    if (!rid) return;
+    setChallengeLoading(true); setChallengeResult(null);
+    try {
+      const res = await fetch(`${API_URL}/api/challenge`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ result_id: rid, counter_argument: counterArg.trim() }),
+      });
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.detail || 'Challenge failed.'); }
+      const data = await res.json();
+      setChallengeResult(data);
+    } catch (err) { setChallengeResult({ counter_status: 'ERROR', reasoning: err.message }); }
+    finally { setChallengeLoading(false); }
   };
 
   const handleKeyDown = (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleSubmit(); };
@@ -435,9 +458,58 @@ function App() {
                   <button className="share-btn result-copy-btn" onClick={copyResultText} data-testid="copy-result-button">
                     {resultCopied ? <Check size={16} /> : <ClipboardCheck size={16} />}{resultCopied ? 'Result copied!' : 'Copy result'}
                   </button>
-                  <button className="retry-btn" onClick={() => { setResult(null); setIdea(''); setContext(emptyContext()); window.scrollTo({ top: 0, behavior: 'smooth' }); }} data-testid="try-another-button">
+                  <button className="retry-btn" onClick={() => { setResult(null); setIdea(''); setContext(emptyContext()); setChallengeOpen(false); setChallengeResult(null); setCounterArg(''); window.scrollTo({ top: 0, behavior: 'smooth' }); }} data-testid="try-another-button">
                     <RotateCcw size={14} /> New idea
                   </button>
+                </div>
+
+                {/* Challenge the Verdict */}
+                <div className="challenge-section" data-testid="challenge-section">
+                  {!challengeOpen && !challengeResult && (
+                    <button className="challenge-toggle-btn" onClick={() => setChallengeOpen(true)} data-testid="challenge-toggle-btn">
+                      <Swords size={16} /> Challenge the Verdict
+                    </button>
+                  )}
+
+                  <AnimatePresence>
+                    {challengeOpen && !challengeResult && (
+                      <motion.div className="challenge-form" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }} data-testid="challenge-form">
+                        <div className="challenge-form-header">
+                          <Swords size={14} />
+                          <span>Think we got it wrong? Make your case.</span>
+                        </div>
+                        <textarea
+                          className="challenge-textarea"
+                          placeholder="Type your counter-argument. Be specific — vague cope gets rejected."
+                          value={counterArg}
+                          onChange={e => setCounterArg(e.target.value)}
+                          maxLength={1000}
+                          rows={3}
+                          data-testid="challenge-textarea"
+                        />
+                        <div className="challenge-actions">
+                          <button className="challenge-submit-btn" onClick={handleChallenge} disabled={challengeLoading || counterArg.trim().length < 10} data-testid="challenge-submit-btn">
+                            {challengeLoading ? (<span className="loading-text"><span className="spinner" />Evaluating your counter...</span>) : (<><Send size={14} /> Submit Counter</>)}
+                          </button>
+                          <button className="challenge-cancel-btn" onClick={() => { setChallengeOpen(false); setCounterArg(''); }} data-testid="challenge-cancel-btn">Cancel</button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <AnimatePresence>
+                    {challengeResult && challengeResult.counter_status !== 'ERROR' && (
+                      <motion.div className="challenge-result" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }} data-testid="challenge-result">
+                        <div className={`challenge-badge ${challengeResult.counter_status === 'ACCEPTED' ? 'challenge-accepted' : 'challenge-rejected'}`} data-testid="challenge-badge">
+                          {challengeResult.counter_status === 'ACCEPTED' ? 'COUNTER ACCEPTED' : 'COUNTER REJECTED'}
+                        </div>
+                        <p className="challenge-reasoning" data-testid="challenge-reasoning">{challengeResult.reasoning}</p>
+                        <button className="challenge-retry-btn" onClick={() => { setChallengeResult(null); setChallengeOpen(true); setCounterArg(''); }} data-testid="challenge-retry-btn">
+                          <Swords size={13} /> Challenge Again
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* Pivot Suggestions */}
